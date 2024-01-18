@@ -96,7 +96,7 @@ class WeightsDownloadCache:
                 return os.path.join(self.base_dir, "trained-model")
             else:
                 print(f"File at {dest} already exists. Using cached file.")
-                return dest
+                return f'{dest}/lora.safetensors'
         else:
             self.download_weights(url, dest)
 

@@ -29,9 +29,11 @@ from diffusers.models.attention_processor import LoRAAttnProcessor2_0
 MODEL_CACHE = "./sdxl-cache"
 FEATURE_EXTRACTOR = "./feature-extractor"
 
+
 class KarrasDPM:
     def from_config(config):
         return DPMSolverMultistepScheduler.from_config(config, use_karras_sigmas=True)
+
 
 SCHEDULERS = {
     "DDIM": DDIMScheduler,
@@ -43,6 +45,7 @@ SCHEDULERS = {
     "PNDM": PNDMScheduler,
 }
 
+
 def download_weights(url, dest):
     start = time.time()
     print("downloading url: ", url)
@@ -50,9 +53,21 @@ def download_weights(url, dest):
     subprocess.check_call(["pget", "-x", url, dest], close_fds=False)
     print("downloading took: ", time.time() - start)
 
+
 class Predictor(BasePredictor):
     def load_trained_weights(self, weights, pipe):
         from no_init import no_init_or_tensor
+        # Download and extract the weights if they are in a .tar file
+        if weights_url.endswith(".tar"):
+            local_tar_path = self.weights_cache.ensure(weights_url)
+            with tarfile.open(local_tar_path) as tar:
+                tar.extractall(path=self.weights_cache.base_dir)
+            # Replace with the actual folder name inside the tar
+            local_weights_cache = os.path.join(
+                self.weights_cache.base_dir, "trained-model")
+        else:
+            local_weights_cache = self.weights_cache.ensure(weights_url)
+
         # weights can be a URLPath, which behaves in unexpected ways
         weights = str(weights)
         if self.tuned_weights == weights:
@@ -80,7 +95,8 @@ class Predictor(BasePredictor):
         else:
             print("Loading Unet LoRA")
             unet = pipe.unet
-            tensors = load_file(os.path.join(local_weights_cache, "lora.safetensors"))
+            tensors = load_file(os.path.join(
+                local_weights_cache, "lora.safetensors"))
             unet_lora_attn_procs = {}
             name_rank_map = {}
             for tk, tv in tensors.items():
@@ -112,16 +128,19 @@ class Predictor(BasePredictor):
                         cross_attention_dim=cross_attention_dim,
                         rank=name_rank_map[name],
                     )
-                unet_lora_attn_procs[name] = module.to("cuda", non_blocking=True)
+                unet_lora_attn_procs[name] = module.to(
+                    "cuda", non_blocking=True)
 
             unet.set_attn_processor(unet_lora_attn_procs)
             unet.load_state_dict(tensors, strict=False)
 
         # load text
         handler = TokenEmbeddingsHandler(
-            [pipe.text_encoder, pipe.text_encoder_2], [pipe.tokenizer, pipe.tokenizer_2]
+            [pipe.text_encoder, pipe.text_encoder_2], [
+                pipe.tokenizer, pipe.tokenizer_2]
         )
-        handler.load_embeddings(os.path.join(local_weights_cache, "embeddings.pti"))
+        handler.load_embeddings(os.path.join(
+            local_weights_cache, "embeddings.pti"))
 
         # load params
         with open(os.path.join(local_weights_cache, "special_params.json"), "r") as f:
@@ -138,7 +157,8 @@ class Predictor(BasePredictor):
             weights = None
 
         self.weights_cache = WeightsDownloadCache()
-        self.feature_extractor = CLIPImageProcessor.from_pretrained(FEATURE_EXTRACTOR)
+        self.feature_extractor = CLIPImageProcessor.from_pretrained(
+            FEATURE_EXTRACTOR)
         print("Loading SDXL txt2img pipeline...")
         self.txt2img_pipe = DiffusionPipeline.from_pretrained(
             MODEL_CACHE,
@@ -279,7 +299,8 @@ class Predictor(BasePredictor):
             sdxl_kwargs["height"] = height
             pipe = self.txt2img_pipe
 
-        pipe.scheduler = SCHEDULERS[scheduler].from_config(pipe.scheduler.config)
+        pipe.scheduler = SCHEDULERS[scheduler].from_config(
+            pipe.scheduler.config)
         generator = torch.Generator("cuda").manual_seed(seed)
 
         common_args = {
@@ -293,7 +314,7 @@ class Predictor(BasePredictor):
         if self.is_lora:
             sdxl_kwargs["cross_attention_kwargs"] = {"scale": lora_scale}
 
-        output = pipe(**common_args, **sdxl_kwargs)        
+        output = pipe(**common_args, **sdxl_kwargs)
         output_paths = []
 
         for i, image in enumerate(output.images):

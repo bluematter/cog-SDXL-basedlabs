@@ -51,6 +51,12 @@ def download_weights(url, dest):
     start = time.time()
     print("downloading url: ", url)
     print("downloading to: ", dest)
+
+    # Check if the destination file already exists
+    if os.path.exists(dest):
+        print(f"The file {dest} already exists. Skipping download.")
+        return
+
     subprocess.check_call(["pget", "-x", url, dest], close_fds=False)
     print("downloading took: ", time.time() - start)
 

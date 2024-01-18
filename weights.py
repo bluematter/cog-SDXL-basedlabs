@@ -77,18 +77,25 @@ class WeightsDownloadCache:
         :param url: URL to download weights file from, if not in cache.
         :return: Path to weights.
         """
-        path = self.weights_path(url)
+        hashed_url = hashlib.sha256(url.encode()).hexdigest()
+        short_hash = hashed_url[:16]  # Use the first 16 characters of the hash
+        dest = os.path.join(self.base_dir, short_hash)
 
-        if path in self.lru_paths:
-            # here we remove to re-add to the end of the LRU (marking it as recently used)
+        if dest in self.lru_paths:
             self._hits += 1
-            self.lru_paths.remove(path)
-        else:
-            self._misses += 1
-            self.download_weights(url, path)
+            self.lru_paths.remove(dest)
+            return dest
 
-        self.lru_paths.append(path)  # Add file to end of cache
-        return path
+        self._misses += 1
+
+        # Check if the file at dest already exists
+        if os.path.exists(dest):
+            print(f"File at {dest} already exists. Using cached file.")
+        else:
+            self.download_weights(url, dest)
+
+        self.lru_paths.append(dest)  # Add file to end of cache
+        return dest
 
     def weights_path(self, url: str) -> str:
         """
@@ -117,7 +124,8 @@ class WeightsDownloadCache:
         st = time.time()
         # maybe retry with the real url if this doesn't work
         try:
-            output = subprocess.check_output(["pget", "-x", url, dest], close_fds=True)
+            output = subprocess.check_output(
+                ["pget", "-x", url, dest], close_fds=True)
             print(output)
         except subprocess.CalledProcessError as e:
             # If download fails, clean up and re-raise exception

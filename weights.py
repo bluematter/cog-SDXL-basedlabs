@@ -90,7 +90,13 @@ class WeightsDownloadCache:
 
         # Check if the file at dest already exists
         if os.path.exists(dest):
-            print(f"File at {dest} already exists. Using cached file.")
+            # Check if it's a tar file and if the extraction folder exists
+            if url.endswith(".tar") and os.path.exists(os.path.join(self.base_dir, "trained-model")):
+                print(f"Tar file extracted folder already exists. Using cached version.")
+                return os.path.join(self.base_dir, "trained-model")
+            else:
+                print(f"File at {dest} already exists. Using cached file.")
+                return dest
         else:
             self.download_weights(url, dest)
 

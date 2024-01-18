@@ -7,6 +7,7 @@ import torch
 import shutil
 import subprocess
 import numpy as np
+import tarfile
 from typing import List, Optional
 from diffusers.utils import load_image
 from safetensors.torch import load_file

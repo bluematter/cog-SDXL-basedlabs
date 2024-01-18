@@ -6,6 +6,15 @@ import subprocess
 import time
 
 
+def list_directory_contents(directory):
+    print(f"Listing contents of directory: {directory}")
+    if os.path.exists(directory):
+        for filename in os.listdir(directory):
+            print(filename)
+    else:
+        print("Directory does not exist.")
+
+
 class WeightsDownloadCache:
     def __init__(
         self, min_disk_free: int = 10 * (2**30), base_dir: str = "/src/weights-cache"
@@ -96,6 +105,7 @@ class WeightsDownloadCache:
                 return os.path.join(self.base_dir, "trained-model")
             else:
                 print(f"File at {dest} already exists. Using cached file.")
+                print(f'FUCK FUCK {list_directory_contents(dest)}')
                 return f'{dest}/trained-model/lora.safetensors'
         else:
             self.download_weights(url, dest)

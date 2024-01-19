@@ -105,8 +105,10 @@ class Predictor(BasePredictor):
         else:
             print("Loading Unet LoRA")
             unet = pipe.unet
-            tensors = load_file(os.path.join(
-                local_weights_cache, "lora.safetensors"))
+            lora_path = os.path.join(local_weights_cache, "lora.safetensors")
+            # This will print the exact path being used
+            print("LoRA path:", lora_path)
+            tensors = load_file(lora_path)
             unet_lora_attn_procs = {}
             name_rank_map = {}
             for tk, tv in tensors.items():

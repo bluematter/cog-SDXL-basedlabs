@@ -85,7 +85,7 @@ class Predictor(BasePredictor):
             print("Loading Unet LoRA")
             unet = pipe.unet
             tensors = load_file(os.path.join(
-                local_weights_cache, "lora.safetensors"))
+                "lora", "ral-jeans-sdxl.safetensors"))
             unet_lora_attn_procs = {}
             name_rank_map = {}
             for tk, tv in tensors.items():
@@ -109,6 +109,7 @@ class Predictor(BasePredictor):
                         block_id
                     ]
                 elif name.startswith("down_blocks"):
+                    print("Down block", f'{name_rank_map}')
                     block_id = int(name[len("down_blocks.")])
                     hidden_size = unet.config.block_out_channels[block_id]
                 with no_init_or_tensor():
@@ -256,10 +257,16 @@ class Predictor(BasePredictor):
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
-        if lora_weights:
-            self.load_trained_weights(lora_weights, self.txt2img_pipe)
+        # self.txt2img_pipe.load_lora_weights("CiroN2022/toy-face", weight_name="toy_face_sdxl.safetensors", adapter_name="toy")
 
-         # OOMs can leave vae in bad state
+        self.txt2img_pipe.load_lora_weights(
+            './lora/ral-jeans-sdxl.safetensors')
+
+        # self.load_trained_weights('lora/ral-jeans-sdxl.safetensors', self.txt2img_pipe)
+        # if lora_weights:
+        #     self.load_trained_weights(lora_weights, self.txt2img_pipe)
+
+        # OOMs can leave vae in bad state
         if self.txt2img_pipe.vae.dtype == torch.float32:
             self.txt2img_pipe.vae.to(dtype=torch.float16)
 

@@ -106,7 +106,7 @@ class WeightsDownloadCache:
             else:
                 print(f"File at {dest} already exists. Using cached file.")
                 list_directory_contents(f'{dest}/trained-model/')
-                return dest
+                return f'{dest}/trained-model/'
         else:
             self.download_weights(url, dest)
 

@@ -72,9 +72,9 @@ class Predictor(BasePredictor):
             extraction_path = os.path.join(
                 self.weights_cache.base_dir, "trained-model")
             if not os.path.exists(extraction_path):
-                with tarfile.open(local_weights_cache) as tar:
-                    tar.extractall(path=self.weights_cache.base_dir)
-                print("Tar file extracted.")
+                # with tarfile.open(local_weights_cache) as tar:
+                #     tar.extractall(path=self.weights_cache.base_dir)
+                # print("Tar file extracted.")
             local_weights_cache = extraction_path
         print(f'WTF WTF {local_weights_cache}')
 

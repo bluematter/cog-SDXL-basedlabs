@@ -83,10 +83,8 @@ class WeightsDownloadCache:
             # here we remove to re-add to the end of the LRU (marking it as recently used)
             self._hits += 1
             self.lru_paths.remove(path)
-            print("weights already in cache")
         else:
             self._misses += 1
-            print("weights not in cache")
             self.download_weights(url, path)
 
         self.lru_paths.append(path)  # Add file to end of cache
@@ -119,7 +117,6 @@ class WeightsDownloadCache:
         st = time.time()
         # maybe retry with the real url if this doesn't work
         try:
-            print(f"downloading {url}")
             output = subprocess.check_output(
                 ["pget", "-x", url, dest], close_fds=True)
             print(output)

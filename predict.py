@@ -66,16 +66,17 @@ class Predictor(BasePredictor):
         from no_init import no_init_or_tensor
         # Download and extract the weights if they are in a .tar file
         print(f'BRO BRO {weights}')
+        local_weights_cache = self.weights_cache.ensure(weights)
+
         if weights.endswith(".tar"):
-            local_tar_path = self.weights_cache.ensure(weights)
-            print(f'WTF WTF {local_tar_path}')
-            with tarfile.open(local_tar_path) as tar:
-                tar.extractall(path=self.weights_cache.base_dir)
-            # Replace with the actual folder name inside the tar
-            local_weights_cache = os.path.join(
+            extraction_path = os.path.join(
                 self.weights_cache.base_dir, "trained-model")
-        else:
-            local_weights_cache = self.weights_cache.ensure(weights)
+            if not os.path.exists(extraction_path):
+                with tarfile.open(local_weights_cache) as tar:
+                    tar.extractall(path=self.weights_cache.base_dir)
+                print("Tar file extracted.")
+            local_weights_cache = extraction_path
+        print(f'WTF WTF {local_weights_cache}')
 
         # weights can be a URLPath, which behaves in unexpected ways
         weights = str(weights)

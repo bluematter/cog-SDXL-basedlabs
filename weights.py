@@ -6,15 +6,6 @@ import subprocess
 import time
 
 
-def list_directory_contents(directory):
-    print(f"Listing contents of directory: {directory}")
-    if os.path.exists(directory):
-        for filename in os.listdir(directory):
-            print(filename)
-    else:
-        print("Directory does not exist.")
-
-
 class WeightsDownloadCache:
     def __init__(
         self, min_disk_free: int = 10 * (2**30), base_dir: str = "/src/weights-cache"
@@ -100,41 +91,6 @@ class WeightsDownloadCache:
 
         self.lru_paths.append(path)  # Add file to end of cache
         return path
-    # def ensure(self, url: str) -> str:
-    #     """
-    #     Ensure weights file is in the cache and return its path.
-
-    #     This also updates the LRU cache to mark the weights as recently used.
-
-    #     :param url: URL to download weights file from, if not in cache.
-    #     :return: Path to weights.
-    #     """
-    #     hashed_url = hashlib.sha256(url.encode()).hexdigest()
-    #     short_hash = hashed_url[:16]  # Use the first 16 characters of the hash
-    #     dest = os.path.join(self.base_dir, short_hash)
-
-    #     if dest in self.lru_paths:
-    #         self._hits += 1
-    #         self.lru_paths.remove(dest)
-    #         return dest
-
-    #     self._misses += 1
-
-    #     # Check if the file at dest already exists
-    #     if os.path.exists(dest):
-    #         # Check if it's a tar file and if the extraction folder exists
-    #         if url.endswith(".tar") and os.path.exists(os.path.join(self.base_dir, "trained-model")):
-    #             print(f"Tar file extracted folder already exists. Using cached version.")
-    #             return os.path.join(self.base_dir, "trained-model")
-    #         else:
-    #             print(f"File at {dest} already exists. Using cached file.")
-    #             list_directory_contents(f'{dest}/trained-model/')
-    #             return f'{dest}/trained-model/'
-    #     else:
-    #         self.download_weights(url, dest)
-
-    #     self.lru_paths.append(dest)  # Add file to end of cache
-    #     return dest
 
     def weights_path(self, url: str) -> str:
         """
@@ -163,6 +119,7 @@ class WeightsDownloadCache:
         st = time.time()
         # maybe retry with the real url if this doesn't work
         try:
+            print(f"downloading {url}")
             output = subprocess.check_output(
                 ["pget", "-x", url, dest], close_fds=True)
             print(output)
